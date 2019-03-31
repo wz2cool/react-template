@@ -5,6 +5,7 @@ const env = require("./env.json");
 const BundleAnalyzerPlugin = require("webpack-bundle-analyzer")
   .BundleAnalyzerPlugin;
 const UglifyJSPlugin = require("uglifyjs-webpack-plugin");
+const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 
 process.env.NODE_ENV === process.env.NODE_ENV || "development"; // development | production
 process.env.BUILD_ENV === process.env.BUILD_ENV || "prd"; // dev | qa | uat | prd
@@ -31,6 +32,7 @@ plugins.push(
     template: isDev ? "./src/index.dev.html" : "./src/index.html"
   })
 );
+plugins.push(new ForkTsCheckerWebpackPlugin());
 if (process.env.analyze) {
   plugins.push(
     new BundleAnalyzerPlugin({
