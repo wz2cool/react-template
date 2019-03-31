@@ -1,6 +1,6 @@
 import * as React from "react";
 
-export class Readme extends React.Component {
+export default class Readme extends React.Component {
   public render() {
     return <div>read me</div>;
   }
