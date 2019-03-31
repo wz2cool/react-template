@@ -89,7 +89,10 @@ const config = {
   },
   resolve: {
     modules: ["node_modules", path.resolve(__dirname, "src")],
-    extensions: [".js", ".ts", ".tsx", ".less"]
+    extensions: [".js", ".ts", ".tsx", ".less"],
+    alias: {
+      "react-dom": "@hot-loader/react-dom"
+    }
   },
   plugins: plugins,
   devServer: {
@@ -125,14 +128,6 @@ if (!isDev) {
       })
     ]
   };
-}
-
-if (isDev) {
-  // entry.main.unshift("webpack-dev-server/client?http://localhost:8000/");
-  // plugins.push(new webpack.HotModuleReplacementPlugin());
-  // config.output.filename = "[name].js";
-  // config.output.chunkFilename = "[name].js";
-  // config.devtool = "source-map";
 }
 
 module.exports = config;
