@@ -1,22 +1,134 @@
 const path = require("path");
-module.exports = {
-  entry: path.resolve(__dirname, "./src/index.tsx"), //指定入口文件，程序从这里开始编译,__dirname当前所在目录, ../表示上一级目录, ./同级目录
+const webpack = require("webpack");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const env = require("./env.json");
+const BundleAnalyzerPlugin = require("webpack-bundle-analyzer")
+  .BundleAnalyzerPlugin;
+const UglifyJSPlugin = require("uglifyjs-webpack-plugin");
+
+process.env.NODE_ENV === process.env.NODE_ENV || "development"; // development | production
+process.env.BUILD_ENV === process.env.BUILD_ENV || "prd"; // dev | qa | uat | prd
+const isDev = process.env.NODE_ENV === "development" ? true : false;
+
+console.log(`========= LOG ENV ======== `);
+console.log("apiUrl: ", env[process.env.BUILD_ENV].apiUrl);
+console.log("publicPath: ", env[process.env.BUILD_ENV].publicPath);
+console.log("version: ", env[process.env.BUILD_ENV].version);
+const entry = {};
+const plugins = [];
+
+entry.main = ["./src/index.tsx"];
+plugins.push(
+  new webpack.DefinePlugin({
+    "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
+    VERSION: JSON.stringify(env[process.env.BUILD_ENV].version),
+    API_URL: JSON.stringify(env[process.env.BUILD_ENV].apiUrl)
+  })
+);
+plugins.push(
+  new HtmlWebpackPlugin({
+    filename: "index.html",
+    template: isDev ? "./src/index.dev.html" : "./src/index.html"
+  })
+);
+if (process.env.analyze) {
+  plugins.push(
+    new BundleAnalyzerPlugin({
+      analyzerMode: "server",
+      analyzerHost: "127.0.0.1",
+      analyzerPort: 8889,
+      reportFilename: "report.html",
+      defaultSizes: "parsed",
+      openAnalyzer: true,
+      generateStatsFile: false,
+      statsFilename: "stats.json",
+      statsOptions: null,
+      logLevel: "info"
+    })
+  );
+}
+
+const config = {
+  mode: process.env.NODE_ENV,
+  target: "web",
+  context: __dirname,
+  entry: entry,
   output: {
-    path: path.resolve(__dirname, "../dist"), // 输出的路径
-    filename: "bundle.js" // 打包后文件
+    path: path.resolve(__dirname, "dist"),
+    filename: "[name]-[hash].js",
+    chunkFilename: "[name]-[chunkhash].js",
+    globalObject: "this",
+    publicPath: env[process.env.BUILD_ENV].publicPath
   },
   module: {
     rules: [
       {
         test: /\.tsx?$/,
-        use: {
-          loader: "awesome-typescript-loader",
-          options: {
-            presets: ["es2015", "react"]
-          }
-        },
-        exclude: /node_modules/
+        loaders: [
+          "babel-loader?cacheDirectory=true",
+          "awesome-typescript-loader"
+        ]
+      },
+      {
+        test: /\.css$/,
+        loaders: ["style-loader", "css-loader"]
+      },
+      {
+        test: /\.less$/,
+        loaders: ["style-loader", "css-loader", "less-loader"]
       }
     ]
+  },
+  externals: {
+    react: "React",
+    "react-dom": "ReactDOM"
+  },
+  resolve: {
+    modules: ["node_modules", path.resolve(__dirname, "src")],
+    extensions: [".js", ".ts", ".tsx", ".less"]
+  },
+  plugins: plugins,
+  devServer: {
+    contentBase: path.resolve(__dirname, "src"),
+    historyApiFallback: true,
+    disableHostCheck: true,
+    proxy: {
+      "/api": {
+        target: "http://localhost:3000"
+      }
+    },
+    port: 8000,
+    hot: true
   }
 };
+
+if (!isDev) {
+  console.log("use UglifyJSPlugin==================================");
+  compressOption = {};
+  if (process.env.BUILD_ENV === "prd") {
+    console.log("remove console.log");
+    compressOption.pure_funcs = ["console.log"];
+    compressOption.drop_debugger = true;
+  }
+
+  config.optimization = {
+    minimizer: [
+      new UglifyJSPlugin({
+        parallel: true,
+        uglifyOptions: {
+          compress: compressOption
+        }
+      })
+    ]
+  };
+}
+
+if (isDev) {
+  entry.main.unshift("webpack-dev-server/client?http://localhost:8000/");
+  plugins.push(new webpack.HotModuleReplacementPlugin());
+  config.output.filename = "[name].js";
+  config.output.chunkFilename = "[name].js";
+  config.devtool = "source-map";
+}
+
+module.exports = config;
