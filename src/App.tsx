@@ -1,6 +1,10 @@
 import * as React from "react";
 import { hot } from "react-hot-loader/root";
 
-const App = () => <div>Hello World!</div>;
+declare var NODE_ENV: string;
 
-export default hot(App);
+const isDev = NODE_ENV === "development";
+console.log("isDev: ", isDev);
+const App = () => <div>Hello Worldxxxxxxxxxsdfsdfx!</div>;
+
+export default isDev? hot(App) : App;

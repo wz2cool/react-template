@@ -10,20 +10,22 @@ const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 process.env.NODE_ENV === process.env.NODE_ENV || "development"; // development | production
 process.env.BUILD_ENV === process.env.BUILD_ENV || "prd"; // dev | qa | uat | prd
 const isDev = process.env.NODE_ENV === "development" ? true : false;
-
+const apiUrl = env[process.env.BUILD_ENV].apiUrl;
+const publicPath = env[process.env.BUILD_ENV].publicPath;
+const version = env[process.env.BUILD_ENV].version;
 console.log(`========= LOG ENV ======== `);
-console.log("apiUrl: ", env[process.env.BUILD_ENV].apiUrl);
-console.log("publicPath: ", env[process.env.BUILD_ENV].publicPath);
-console.log("version: ", env[process.env.BUILD_ENV].version);
+console.log("apiUrl: ", apiUrl);
+console.log("publicPath: ", publicPath);
+console.log("version: ", version);
 const entry = {};
 const plugins = [];
 
 entry.main = ["./src/index.tsx"];
 plugins.push(
   new webpack.DefinePlugin({
-    "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
-    VERSION: JSON.stringify(env[process.env.BUILD_ENV].version),
-    API_URL: JSON.stringify(env[process.env.BUILD_ENV].apiUrl)
+    NODE_ENV: JSON.stringify(process.env.NODE_ENV),
+    VERSION: version,
+    API_URL: apiUrl
   })
 );
 plugins.push(
@@ -60,7 +62,7 @@ const config = {
     filename: "[name]-[hash].js",
     chunkFilename: "[name]-[chunkhash].js",
     globalObject: "this",
-    publicPath: env[process.env.BUILD_ENV].publicPath
+    publicPath: publicPath
   },
   module: {
     rules: [
@@ -126,11 +128,11 @@ if (!isDev) {
 }
 
 if (isDev) {
-  entry.main.unshift("webpack-dev-server/client?http://localhost:8000/");
-  plugins.push(new webpack.HotModuleReplacementPlugin());
-  config.output.filename = "[name].js";
-  config.output.chunkFilename = "[name].js";
-  config.devtool = "source-map";
+  // entry.main.unshift("webpack-dev-server/client?http://localhost:8000/");
+  // plugins.push(new webpack.HotModuleReplacementPlugin());
+  // config.output.filename = "[name].js";
+  // config.output.chunkFilename = "[name].js";
+  // config.devtool = "source-map";
 }
 
 module.exports = config;
