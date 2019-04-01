@@ -68,6 +68,7 @@ const config = {
     rules: [
       {
         test: /\.tsx?$/,
+        include: path.resolve(__dirname, "src"),
         loaders: [
           "babel-loader?cacheDirectory=true",
           "awesome-typescript-loader"
@@ -75,10 +76,12 @@ const config = {
       },
       {
         test: /\.css$/,
+        include: path.resolve(__dirname, "src"),
         loaders: ["style-loader", "css-loader"]
       },
       {
         test: /\.less$/,
+        include: path.resolve(__dirname, "src"),
         loaders: ["style-loader", "css-loader", "less-loader"]
       }
     ]
