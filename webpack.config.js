@@ -34,7 +34,7 @@ plugins.push(
     template: isDev ? "./src/index.dev.html" : "./src/index.html"
   })
 );
-plugins.push(new ForkTsCheckerWebpackPlugin());
+plugins.push(new ForkTsCheckerWebpackPlugin({ checkSyntacticErrors: true }));
 if (process.env.analyze) {
   plugins.push(
     new BundleAnalyzerPlugin({
@@ -68,18 +68,59 @@ const config = {
     rules: [
       {
         test: /\.tsx?$/,
-        loaders: [
-          "babel-loader?cacheDirectory=true",
-          "awesome-typescript-loader"
+        use: [
+          {
+            loader: "thread-loader",
+            options: {
+              // there should be 1 cpu for the fork-ts-checker-webpack-plugin
+              workers: require("os").cpus().length - 1,
+              poolTimeout: Infinity
+            }
+          },
+          {
+            loader: "babel-loader",
+            options: {
+              cacheDirectory: true
+            }
+          },
+          {
+            loader: "ts-loader",
+            options: {
+              happyPackMode: true
+            }
+          }
         ]
       },
       {
         test: /\.css$/,
-        loaders: ["style-loader", "css-loader"]
+        use: [
+          "style-loader",
+          {
+            loader: "thread-loader",
+            options: {
+              // there should be 1 cpu for the fork-ts-checker-webpack-plugin
+              workers: require("os").cpus().length - 1,
+              poolTimeout: Infinity
+            }
+          },
+          "css-loader"
+        ]
       },
       {
         test: /\.less$/,
-        loaders: ["style-loader", "css-loader", "less-loader"]
+        use: [
+          "style-loader",
+          {
+            loader: "thread-loader",
+            options: {
+              // there should be 1 cpu for the fork-ts-checker-webpack-plugin
+              workers: require("os").cpus().length - 1,
+              poolTimeout: Infinity
+            }
+          },
+          "css-loader",
+          "less-loader"
+        ]
       }
     ]
   },
