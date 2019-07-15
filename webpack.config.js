@@ -52,6 +52,11 @@ if (process.env.analyze) {
   );
 }
 
+const threadLoaderOptions = {
+  // there should be 1 cpu for the fork-ts-checker-webpack-plugin
+  workers: require("os").cpus().length - 1
+};
+
 const config = {
   mode: process.env.NODE_ENV,
   target: "web",
@@ -71,11 +76,7 @@ const config = {
         use: [
           {
             loader: "thread-loader",
-            options: {
-              // there should be 1 cpu for the fork-ts-checker-webpack-plugin
-              workers: require("os").cpus().length - 1,
-              poolTimeout: Infinity
-            }
+            options: threadLoaderOptions
           },
           {
             loader: "babel-loader",
@@ -86,7 +87,8 @@ const config = {
           {
             loader: "ts-loader",
             options: {
-              happyPackMode: true
+              happyPackMode: true,
+              transpileOnly: true
             }
           }
         ]
@@ -97,11 +99,7 @@ const config = {
           "style-loader",
           {
             loader: "thread-loader",
-            options: {
-              // there should be 1 cpu for the fork-ts-checker-webpack-plugin
-              workers: require("os").cpus().length - 1,
-              poolTimeout: Infinity
-            }
+            options: threadLoaderOptions
           },
           "css-loader"
         ]
@@ -112,11 +110,7 @@ const config = {
           "style-loader",
           {
             loader: "thread-loader",
-            options: {
-              // there should be 1 cpu for the fork-ts-checker-webpack-plugin
-              workers: require("os").cpus().length - 1,
-              poolTimeout: Infinity
-            }
+            options: threadLoaderOptions
           },
           "css-loader",
           "less-loader"
@@ -150,7 +144,9 @@ const config = {
   }
 };
 
-if (!isDev) {
+if (isDev) {
+  threadLoaderOptions.pool
+} else {
   console.log("use UglifyJSPlugin==================================");
   compressOption = {};
   if (process.env.BUILD_ENV === "prd") {
