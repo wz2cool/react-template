@@ -145,7 +145,7 @@ const config = {
 };
 
 if (isDev) {
-  threadLoaderOptions.pool
+  threadLoaderOptions.poolTimeout = Infinity;
 } else {
   console.log("use UglifyJSPlugin==================================");
   compressOption = {};
